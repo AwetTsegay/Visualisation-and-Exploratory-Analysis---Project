@@ -1,5 +1,5 @@
 #===============================================================================
-# "Visualisation and Exploratory Analysis - Coursework resit"
+# "Visualisation and Exploratory Analysis - Project"
 #===============================================================================
 #-------------------------------------------------------------------------------
 # Install and load the packages one by one.
