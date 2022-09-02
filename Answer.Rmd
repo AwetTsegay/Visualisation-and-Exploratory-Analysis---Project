@@ -1,0 +1,519 @@
+---
+title: "Visualisation and Exploratory Analysis - Project"
+output: html_document
+---
+
+## 1. Introduction
+
+In this project, I will carry out an in-depth exploratory analysis of an interesting dataset and prepare the data (e.g., clean, organise, and transform data) by using R and produce visualisations and interpret the information in the visualisations and present them in clear and interesting ways.
+
+### 1.1 Learning outcome assessed
+
+* Perform open-ended exploratory analysis of data, and master the analytical presentation and critical evaluation of the results of statistical analyses. 
+
+* Be able to demonstrate practical experience of using standard graph visualisation methods and evaluation of results. 
+
+* Be able to critically assess and evaluate a visualisation.
+
+### 1.2 About the Dataset
+
+The "World Bank international arrivals islands" dataset has contains 27 island nations with their 
+
+- economic indicator, 
+- demographic element, 
+- geographical characteristic 
+- and tourism factors from 2000 to 2012.
+
+### 1.3 Table 1: List of country names
+
+**Index and Country's names** 
+
+1-Mauritius, 10-Dominica, 19-St Lucia
+
+2-Seychelles, 11-Kiribati, 20-Cayman Islands
+
+3-Antigua & Barbuda, 12-Maldives, 21-St Vincent & Grenadines
+
+4-Grenada, 13-Malta, 22-Tonga
+
+5-Bahrain, 14-Marshall Islands, 23-Tuvalu
+
+6-Barbados, 15-Fed Micronesia, 24-Palau
+
+7-Bermuda, 16-Samoa, 25-Singapore
+
+8-Cape Verde, 17-Sao Tome & Principe, 26-Trinidad and Tobago
+
+9-Comoros, 18-St Kitts and Nevis, 27-Solomon Islands
+
+### 1.4 Table 2: Main variables
+
+**Variable's names and their Description**
+
+1. country -- Name of the country, indexed by an integer
+2. year -- Range from 0 to 12 representing a 13 year time frame
+3. pop -- Population of a country
+3. areakm2 -- Area of a country in km2
+4. gdpnom -- Gross domestic product (GDP) of the country, indicating the economic development
+5. flights - WB -- Number of flights
+6. hotels -- Number of hotels
+7. hotrooms -- Number of hotel rooms
+8. receipt -- Tourism receipts, which defined (by WTO) as expenditure of international inbound visitors including their payments to national carriers for international transport. They also include any other payments or payments afterwards made for goods and services received in the destination country.
+9. ovnarriv -- Overnight arrival
+10. dayvisit -- Number of visit days
+11. arram -- Number of arrivals from America
+12. arreur -- Number of arrivals from Europe
+13. arraus -- Number of arrivals from Australia
+
+
+## 2. Part 1: Visualisation 
+### 2.1 Defining questions and goals
+
+#### 2.1.1
+
+In the first question, I will focus on the geographical characteristics. Therefore, the question that I want to answer is what the population density for each island is and how they compare. Population density tells us how crowded an area is, on average. It helps to figure out the resources that a certain area requires, and it also helps to compare areas. I need area size and population size to calculate population density, so I already have this information. *(For this Check plot 3)*
+
+Formula: population density = number of people/area size
+
+$$populationdensity = \frac{number of people}{area size}$$
+
+The population density of an area can be one of the most important determining factors for business and marketing planning. It is not enough to know how many consumers live in a specific state or city. You have to know how many people live in a particular radius.
+
+#### 2.1.2
+
+In the second question, I will focus on the economic indicators. So, the question that I want to answer is how to compare the GDP (Gross Domestic Product) per capita of each island. It is calculated by dividing the GDP of a country by its population. GDP is already given, and it measures the market value of all the final goods and services produced at a specific time by a country. The number of the population is also given. *(For this Check plot 4)*
+
+Formula: GDP per capita = GDP/population size
+
+$$GDP per capita = \frac{GDP}{population size}$$
+
+### 2.2 Loading libraries
+
+```{r}
+# Install and load the packages one by one.
+#install.packages("ggplot2")
+library(ggplot2)
+#library("dplyr")
+library(dplyr)
+#install.packages("naniar")
+library(naniar)
+options(scipen=999)  # turn-off scientific notation like 1e+48
+```
+
+Inspect the data--it is invariably helpful to first look at the raw values. 
+
+- Does the data seem appropriate for answering your question? 
+- If not, you may need to start the process over. 
+- If so, does the data need to be reformatted or cleaned prior to analysis? 
+
+Perform any steps necessary to get the data into shape prior to visual analysis.
+
+### 2.3 Data Collection
+
+Importing the World Bank international arrivals islands dataset
+
+
+```{r}
+data <- read.csv("world_bank_international_arrivals_islands.csv", header=TRUE)
+head(data)
+```
+
+Checking the class of the data.
+
+```{r}
+class(data)
+```
+
+The data has 351 data points and 14 features.
+
+```{r}
+dim(data)
+```
+
+The except country, year, and areakm2 all variables are in a character form. So, I need to change them into numbers.
+
+```{r}
+str(data)
+```
+
+
+The name of Number of flights is not convenient so I will change it into flights.
+
+```{r}
+names(data)
+```
+
+
+By inspecting the data and by looking at the raw values. The data does not seem appropriate for answering my questions. I need to start the process over again and the data needs to be reformatted and cleaned prior to analysis. Therefore, I will perform any steps necessary to get the data into shape prior to visual analysis.
+
+### 2.4 Data Cleaning
+
+Changing the name of a variable flights...WB into flights.
+
+```{r}
+colnames(data)[colnames(data) == "flights...WB"] = "flights"
+names(data)
+```
+
+All the variables are not in numeric format except the country index and year column. So, I changed these to numeric and introduced NAs for missing values.
+
+```{r}
+data$pop <- as.numeric(data$pop)
+data$areakm2 <- as.numeric(data$areakm2)
+data$gdpnom <- as.numeric(data$gdpnom)
+data$flights <- as.numeric(data$flights)
+data$hotels <- as.numeric(data$hotels)
+data$hotrooms <- as.numeric(data$hotrooms)
+data$receipt <- as.numeric(data$receipt)
+data$ovnarriv <- as.numeric(data$ovnarriv)
+data$dayvisit <- as.numeric(data$dayvisit)
+data$arram <- as.numeric(data$arram)
+data$arreur <- as.numeric(data$arreur)
+data$arraus <- as.numeric(data$arraus)
+```
+
+Now, everything looks fine. But there are many missing values and I need to select appropriate variables for exploring the data.
+
+```{r}
+str(data)
+```
+
+Missing values can be seen.
+
+```{r}
+head(data)
+```
+
+Checking which variables have a missing value and none at all.
+
+```{r}
+not_all_na <- function(x) any(!is.na(x))
+data_with_nas <- data %>% select(where(not_all_na))
+head(data_with_nas)
+```
+
+Each feature does not have all its observations as missing values.
+
+```{r}
+not_any_na <- function(x) all(!is.na(x))
+data_with_no_na <- data %>% select(where(not_any_na))
+head(data_with_no_na)
+```
+
+areakm2 does not have a missing value.
+
+Checking missing values.
+
+```{r}
+any(is.na(data)) 
+```
+
+Checking missing values for each variable
+
+```{r}
+cat("The country variable has", sum(is.na(data$country)), "Missing values.\n")
+cat("The year variable has", sum(is.na(data$year)), "Missing values.\n")
+cat("The pop variable has", sum(is.na(data$pop)), "Missing values.\n")
+cat("The areakm2 variable has", sum(is.na(data$areakm2)), "Missing values.\n")
+cat("The gdpnom variable has", sum(is.na(data$gdpnom)), "Missing values.\n\n")
+cat("The flights variable has", sum(is.na(data$flights)), "Missing values.\n")
+cat("The hotels variable has", sum(is.na(data$hotels)), "Missing values.\n")
+
+cat("The hotrooms variable has", sum(is.na(data$hotrooms)), "Missing values.\n\n")
+cat("The receipt variable has", sum(is.na(data$receipt)), "Missing values.\n")
+cat("The ovnarriv variable has", sum(is.na(data$ovnarriv)), "Missing values.\n\n")
+cat("The dayvisit variable has", sum(is.na(data$dayvisit)), "Missing values.\n")
+cat("The arram variable has", sum(is.na(data$arram)), "Missing values.\n")
+cat("The arreur variable has", sum(is.na(data$arreur)), "Missing values.\n")
+cat("The arraus variable has", sum(is.na(data$arraus)), "Missing values.\n")
+
+```
+
+
+
+#### 2.4.1 Feature selection
+
+Selecting relevant features. I exclude the observations flights, hotels, hotrooms, dayvisit, arram, arraur, and arraus from the data frame because they have many missing values (above 190 missing values).
+
+```{r}
+data.1 <- subset(data, select=-c(flights,hotels,hotrooms,dayvisit,arram,arreur,arraus))
+head(data.1)
+```
+
+The data.1 has 351 observations and 7 variables.
+
+```{r}
+dim(data.1)
+```
+
+At this stage, I will try to handle the missing values. So, one way to do this is to replace the missing values with their mean. Therefore, the code below calculates the mean for all non-missing values of that variable grouped by country, then replaces the missing value with the rounded mean.
+
+#### 2.4.2 Data analysis
+
+```{r}
+data.1 <- data.1 %>% group_by(country) %>% mutate(pop = ifelse(is.na(pop), mean(pop, na.rm = TRUE), pop), pop = as.numeric(format(round(pop , 0))))
+
+data.1 <- data.1 %>% group_by(country) %>% mutate(gdpnom = ifelse(is.na(gdpnom), mean(gdpnom, na.rm = TRUE), gdpnom), gdpnom = as.numeric(format(round(gdpnom, 0))))
+
+data.1 <- data.1 %>% group_by(country) %>% mutate(receipt = ifelse(is.na(receipt), mean(receipt, na.rm = TRUE), receipt), receipt = as.numeric(format(round(receipt, 0))))
+
+data.1 <- data.1 %>% group_by(country) %>% mutate(ovnarriv = ifelse(is.na(ovnarriv), mean(ovnarriv, na.rm = TRUE), ovnarriv), ovnarriv = as.numeric(format(round(ovnarriv, 0))))
+
+head(data.1)
+```
+
+Checking missing values for each variable
+
+```{r}
+cat("The country variable has", sum(is.na(data.1$country)), "Missing values.\n")
+cat("The year variable has", sum(is.na(data.1$year)), "Missing values.\n")
+cat("The pop variable has", sum(is.na(data.1$pop)), "Missing values.\n")
+cat("The areakm2 variable has", sum(is.na(data.1$areakm2)), "Missing values.\n\n")
+cat("The gdpnom variable has", sum(is.na(data.1$gdpnom)), "Missing values.\n")
+
+cat("The receipt variable has", sum(is.na(data.1$receipt)), "Missing values.\n")
+
+cat("The ovnarriv variable has", sum(is.na(data.1$ovnarriv)), "Missing values.\n")
+
+```
+
+But still, there are missing values. For example, the gdpnom variable has 26 missing values, which are for countries 20 and 24. The values are completely missing. The receipt variable also has 13 missing values, which are for country index 23. So, these missing values will not be included when I plot graphs.
+
+```{r}
+names(data.1)
+```
+
+
+
+```{r}
+# create new dataset without missing data
+#clean_data.1 <- na.omit(data.1)
+#write.table(clean_data.1,file='clean_data.1_islands.csv',row.names=F,sep = ",")
+```
+
+
+```{r}
+# create new dataset without missing data
+data.1 <- na.omit(data.1)
+```
+
+Three island deleted these are 20-Cayman Islands, 23-Tuvalu and 24-Palau. As a result, they are not going to be used in my anaysis.
+
+
+Checking missing values.
+
+```{r}
+any(is.na(data.1)) 
+```
+Now, there is no any missing values so the data is clean and read to be used.
+
+I calculate the mean values for each variable grouped by country and for 13 years. And I calculate GDP per capita and population density. I also added new columns, GDP_per_capita, which represents the country's GDP per capita, and population density.
+
+
+```{r}
+data.2 <- data.1 %>%
+  group_by(country) %>%
+  summarize(pop = mean(pop),pop = as.numeric(format(round(pop, 0))),
+            areakm2 = mean(areakm2),
+            gdpnom = mean(gdpnom),gdpnom = as.numeric(format(round(gdpnom , 0))),
+            receipt = mean(receipt),receipt = as.numeric(format(round(receipt , 0))),
+            ovnarriv = mean(ovnarriv),ovnarriv  = as.numeric(format(round(ovnarriv  ,0))),
+            pop_density  = pop/areakm2, pop_density =as.numeric(format(round(pop_density ,0))),
+            GDP_per_capita = gdpnom/pop,GDP_per_capita =as.numeric(format(round(GDP_per_capita ,0))))
+```
+
+Adding the countrynames column.
+
+```{r}
+data.2$countrynames <- c('Mauritius','Seychelles','Antigua & Barbuda','Grenada','Bahrain','Barbados','Bermuda','Cape Verde','Comoros','Dominica','Kiribati','Maldives','Malta','Marshall Islands','Fed Micronesia','Samoa','Sao Tome & Principe','St Kitts and Nevis','St Lucia','St Vincent & Grenadines','Tonga','Singapore','Trinidad and Tobago','Solomon Islands')
+head(data.2)
+```
+
+Checking missing values.
+
+```{r}
+cat("The country variable has", sum(is.na(data.2$country)), "Missing values.\n")
+
+cat("The pop variable has", sum(is.na(data.2$pop)), "Missing values.\n")
+cat("The areakm2 variable has", sum(is.na(data.2$areakm2)), "Missing values.\n\n")
+cat("The gdpnom variable has", sum(is.na(data.2$gdpnom)), "Missing values.\n")
+
+cat("The receipt variable has", sum(is.na(data.2$receipt)), "Missing values.\n")
+
+cat("The ovnarriv variable has", sum(is.na(data.2$ovnarriv)), "Missing values.\n")
+
+cat("The pop_density variable has", sum(is.na(data.2$pop_density)), "Missing values.\n")
+
+cat("The GDP_per_capita variable has", sum(is.na(data.2$GDP_per_capita)), "Missing values.\n")
+
+```
+
+Create new dataset without missing data for data.2 and saving it as CSV file.
+
+```{r}
+# create new dataset without missing data
+#clean_data.2 <- na.omit(data.2)
+#write.table(clean_data.2,file='clean_data.2_islands.csv',row.names=F,sep = ",")
+```
+
+
+
+### 2.7 Interpreting results
+#### 2.7.1 Plot 1
+
+```{r}
+#-----------------plot 1
+ggplot(data.2, aes(x=reorder(countrynames,  pop), y= pop)) +
+  geom_bar(stat="identity", width=0.7,fill="black")+coord_flip()+
+  geom_text(aes(label=pop), hjust=-0.2, size=3.5)+
+  theme_minimal()+ylim(0, 5000000)+
+  xlab("Country's names")+ylab("Population of a country")+
+  ggtitle("Bar plot of countries Vs Population of a country")+
+  theme_minimal()
+
+```
+
+#### 2.7.2 Plot 2
+
+```{r}
+#-----------------plot 2
+ggplot(data.2, aes(x=reorder(countrynames,  areakm2 ), y= areakm2 )) +
+  geom_bar(stat="identity", width=0.7,fill="blue")+coord_flip()+
+  geom_text(aes(label=areakm2), hjust=-0.2, size=3.5)+
+  theme_minimal()+ylim(0, 30000)+
+  xlab("Country's names")+ylab("Area of a country in  km^2")+
+  ggtitle("Bar plot of countries Vs their are in km^2")+
+  theme_minimal()
+
+```
+
+The above visualisation demonstrates the total area of a country in kilometres per square. The Solomon Islands have the largest area, which is 28400 kilometres per square, and Tuvalu has the smallest area, which is 26 kilometres per square.
+
+In a bar chart, I decided to place the country's name along the y-axis to make the plot more presentable and quickly identifiable by users. In the horizontal axis, I assigned the area of a country in kilometres per square, and the bars are grouped by area from top highest to bottom lowest. The width of the bars is 0.7, and I found this scale appropriate since there is a small gap between the bars. The labels also show the area of the country and their size is 3.5, which is convenient in this plot since they can be read clearly. The colour of the bars is blue, and at the end of the edge there are numbers which show the exact area of the islands, and these make the plot easier to understand.
+
+#### 2.7.3 plot 3
+
+```{r}
+#-----------------plot 3
+ggplot(data.2, aes(x=reorder(countrynames,  pop_density), y= pop_density)) +
+  geom_bar(stat="identity", width=0.7,fill="cyan")+coord_flip()+
+  geom_text(aes(label=pop_density), hjust=-0.2, size=3.5)+
+  theme_minimal()+ylim(0, 7000)+
+  xlab("Country's names")+ylab("Population Density")+
+  ggtitle("Bar plot of countries Vs Population Density")+
+  theme_minimal()
+
+```
+
+In plot 3, I compare the area of islands and use the contrasting population densities to make observations about those areas. 
+
+For example, Singapore has 4,560,038 people over its 710 $km^2$, and its population density is 6,423 people per $km^2$. It also has the highest population density. So, what does this tell us? The population is high relative to the size of the country. 
+
+From the bar graph, we can also see that the population of Antigua and Barbuda is far lower than the population density of Singapore.
+
+The Solomon Islands has 478,017 people over its 28,400 $km^2$ and its population density is 17 people per $km^2$. This is the lowest population density compared to the other islands. So, this demonstrates that fewer people live in such large areas.
+
+In plot 3, I put the country's names along the vertical and the GDP per capita along the horizontal axis, and the bars are grouped by GDP per capita from lowest to the highest value, which makes the plot more readable and understandable. I also use cyan colour and put numbers alongside the edge of the bars, and these make the graph easier for the reader.
+
+#### 2.7.4 Plot 4
+
+
+```{r}
+#-------------------plot 4
+ggplot(data.2, aes(x=reorder(countrynames, GDP_per_capita), y=GDP_per_capita)) +
+  geom_bar(stat="identity", width=0.7, color="red", fill="red")+coord_flip()+
+  geom_text(aes(label=GDP_per_capita), hjust=-.2, size=3.5)+
+  theme_minimal()+ylim(0, 90000)+
+  xlab("Country names")+ylab("GDP per capita")+
+  ggtitle("Bar plot of countries Vs their GDP per capita")+theme_minimal()
+```
+
+The above bar chart illustrates the Gross Domestic Product (GDP) per capita (per person) for each island country.
+
+Bermuda has the highest GDP per capita, which is 76,704; this indicates the country's economic output per person is high and determines the country's prosperity through economic growth. It also shows the amount of money each person earns, which is 76,704.
+
+Higher GDP per capita is also often associated with positive outcomes in a wide range of areas, such as better health, more education, and even greater life satisfaction.
+
+Comoros has the lowest GDP per capita, which is 640. This shows that each person earns 640. The country's economic growth, standard of living, prosperity, and overall well-being are low.
+
+In this visualisation, I decided to side the country's names along the vertical to make the plot more readable and understandable. In the horizontal axis, I assigned the GDP per capita, and the bars are grouped by GDP per capita from lowest to highest value. I also use red colour and put numbers alongside the edge of the bars, and these make the graph easier for the reader.
+
+
+## 3. Part 2: Persuasion
+### 3.1 Plot 5
+
+```{r}
+#-----------------plot 5
+ggplot(data.2, aes(x=reorder(countrynames, receipt), y= receipt)) +
+  geom_bar(stat="identity", width=0.7,fill="yellow")+coord_flip()+
+  geom_text(aes(label=receipt), hjust=-0.2, size=3.5)+
+  theme_minimal()+ylim(0, 9600000000)+
+  xlab("Country names")+ylab("Tourism receipts")+
+  ggtitle("Bar plot of countries Vs Tourism receipts\n")+
+  theme_minimal()
+
+```
+
+```{r}
+max(data.2$receipt)
+```
+
+Tourism receipts, which defined (by WTO) as expenditure of international inbound visitors including their payments to national carriers for international transport. They also include any other payments or payments afterwards made for goods and services received in the destination country.
+
+The Tourism receipts variable includes many factors, so it is difficult to quickly understand and analyse it, interpret the results, and present them to the readers.
+
+As we can see from plot 5, Singapore has the highest tourism receipts, which are 8,202,166,667, and this is much higher than the other islands. This tells us that Singapore has a good tourism economy.
+
+### 3.2 Plot 6
+
+```{r}
+#-----------------plot 6
+ggplot(data.2, aes(x=reorder(countrynames,  ovnarriv), y= ovnarriv)) +
+  geom_bar(stat="identity", width=0.7,fill="green")+coord_flip()+
+  geom_text(aes(label=ovnarriv), hjust=-0.2, size=3.5)+
+  theme_minimal()+ylim(0, 8000000)+
+  xlab("Country's names")+ylab("Overnight arrival")+
+  ggtitle("Bar plot of countries Vs Overnight arrival")+
+  theme_minimal()
+
+```
+
+
+
+## 4. Conclusion
+
+The main aims of this project were to clean data, carry out an exploratory analysis using R, and interpret the results. The dataset contains 27 island nations with their 14 variables from 2000 to 2012.
+
+I have also defined two questions that I wanted to answer throughout this project: one about population density and the second about GDP per capita.
+
+First, I checked the Excel file, and it had some missing values. Then, I loaded useful libraries and imported the file into R, and checked each column of the table to confirm that the data was imported correctly. The data has 351 data points and 14 features.
+
+Then, I inspected the data and looked at the raw values. The data does not seem appropriate for answering my questions. So, I started the process over again and cleaned it prior to analysis.
+
+After that, I selected relevant features. I removed seven variables from the data because they had a high number of missing values (over 190).
+
+This was how I handled the missing values. First, I calculated the mean for all non-missing values of that variable grouped by country, and then I replaced the missing value with the rounded mean. However, there were missing values, and I deleted these values from the date.
+
+Finally, my data was clean and there were no missing values, and it is ready to be used. I also saved this data as clean_data.1_islands as a CSV file.
+
+I created a second dataset by calculating the mean values for each variable grouped by country and for 13 years, and I also calculated GDP per capita and population density. Then, I added new columns, which are GDP per capita, population density, and country names. I saved this data as clean_data.2_islands as a CSV file.
+
+Finally, I interpreted the results. In plot 3, I talked about population density, and in plot 4, I discussed GDP per capita.
+
+
+## 5. Reference
+
+<https://ggplot2.tidyverse.org/>
+
+<http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html>
+
+<https://en.wikipedia.org/wiki/Gross_domestic_product>
+
+<https://en.wikipedia.org/wiki/Population_density>
+
+<https://www.investopedia.com/terms/p/per-capita-gdp.asp>
+
+
+````
+
+````
